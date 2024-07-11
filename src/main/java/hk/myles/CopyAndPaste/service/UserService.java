@@ -11,6 +11,8 @@ public interface UserService {
 
     Optional<User> fetchUserById(String id);
 
+    void updateLastSeenById(String id);
+
     User updateUser(User user);
 
     List<User> fetchUsers();

@@ -25,19 +25,15 @@ public class SubscribeListener implements ApplicationListener<SessionSubscribeEv
     @Autowired
     private UserService userService;
 
-    @Autowired
     public SubscribeListener(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
     private void createOrUpdateUser(String userId) {
         Optional<User> optionalUser = userService.fetchUserById(userId);
-        User user;
         if (optionalUser.isPresent()) {
             // existing user
-            user = optionalUser.get();
-            user.setLastSeen(new Date());
-            userService.updateUser(user);
+            userService.updateLastSeenById(userId);
         } else {
             // create user
             userService.createUserById(userId);

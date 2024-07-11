@@ -30,6 +30,16 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
+    @Override
+    public void updateLastSeenById(String id) {
+        Optional<User> optionalSender = fetchUserById(id);
+        if (optionalSender.isPresent()) {
+            User sender = optionalSender.get();
+            sender.setLastSeen(new Date());
+            updateUser(sender);
+        }
+    }
+
     public User updateUser(User user) {
         String id = user.getId();
         User userDB = userRepository.findById(id).get();
