@@ -81,13 +81,13 @@ public class SocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        broadcastUserLeft(session);
+        broadcastUserLeave(session);
         sessions.remove(session);
         sessionIdUserFragMapping.remove(session.getId());
         log.info("Removed session. Current sessions: {}", sessions.size());
     }
 
-    private void broadcastUserLeft(WebSocketSession closedSession) throws JsonProcessingException {
+    private void broadcastUserLeave(WebSocketSession closedSession) throws JsonProcessingException {
         String userFrag = sessionIdUserFragMapping.get(closedSession.getId());
         if (userFrag.isEmpty()) {
             // no need to broadcast
@@ -95,7 +95,7 @@ public class SocketHandler extends TextWebSocketHandler {
         }
         ObjectWriter objectWriter = new ObjectMapper().writer();
         String messageJson = objectWriter.writeValueAsString(new Object() {
-            public final String event = "userLeft";
+            public final String event = "userLeave";
             public final Map<String, String> data = Map.of("userFrag", userFrag);
         });
 
@@ -104,7 +104,7 @@ public class SocketHandler extends TextWebSocketHandler {
                 try {
                     session.sendMessage(new TextMessage(messageJson));
                 } catch (IOException e) {
-                    log.warn("Error sending user left message to session {}", session.getId());
+                    log.warn("Error sending \"userLeave\" message to session {}", session.getId());
                 }
             }
         }
