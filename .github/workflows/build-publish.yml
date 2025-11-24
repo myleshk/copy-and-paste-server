@@ -1,0 +1,61 @@
+name: Java CI with Gradle and Docker
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Get Gradle project version and set env var
+        run: |
+          VERSION=$(./gradlew properties --quiet | grep "^version:" | awk '{print $2}')
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build Java application with Gradle
+        run: ./gradlew build
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: myleshk/cnp
+          # Define custom tags using the extracted version env variable
+          tags: |
+            type=raw,value=${{ env.APP_VERSION }}
+            type=raw,value=latest,priority=99
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
